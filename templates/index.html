@@ -5,15 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Video Downloader</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>YouTube Video Downloader</h1>
+        <h1>🎥 YouTube Video Downloader</h1>
         <form id="downloadForm">
-            <input type="text" id="urlInput" placeholder="Enter YouTube Video URL" required>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" id="urlInput" placeholder="Enter YouTube URL here..." required>
             <button type="submit" id="downloadBtn">Download Video</button>
         </form>
         <div id="message"></div>
+        <div class="loading-text" id="loadingText">
+            <div class="loader"></div>
+            <span>Processing your request...</span>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>

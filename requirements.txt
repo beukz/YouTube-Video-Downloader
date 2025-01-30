@@ -1,4 +1,5 @@
 Flask
+flask-wtf
 pytube
 pytubefix
 yt_dlp
