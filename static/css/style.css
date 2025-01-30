@@ -79,26 +79,35 @@ h1 {
   box-shadow: none;
 }
 
+#message {
+    margin-top: 1rem;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #6366f1;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid #e2e8f0;
+}
+
 .progress-container {
-  margin-top: 1.5rem;
-  background: #e2e8f0;
-  border-radius: 0.5rem;
-  height: 1rem;
-  overflow: hidden;
+    margin-top: 1.5rem;
+    background: #e2e8f0;
+    border-radius: 0.5rem;
+    height: 1rem;
+    overflow: hidden;
+    position: relative;
 }
 
 .progress-bar {
-  height: 100%;
-  background: var(--primary);
-  width: 0%;
-  transition: width 0.3s ease;
+    height: 100%;
+    background: #6366f1;
+    width: 0%;
+    transition: width 0.5s ease-in-out;
+    /* transition: width 0.3s ease; */
 }
 
-#message {
-  margin-top: 1rem;
-  text-align: center;
-  color: #64748b;
-}
 
 .video-preview {
   margin-top: 2rem;
@@ -172,6 +181,7 @@ h1 {
 .button-loading {
   opacity: 0.8;
   cursor: not-allowed;
+  /* background: #4f46e5; */
 }
 
 .button-loading:hover {

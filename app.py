@@ -9,6 +9,7 @@ import threading
 import json
 import logging
 import re
+import flask
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -30,20 +31,23 @@ class ProgressHook:
     def hook(self, d):
         try:
             if d['status'] == 'downloading':
-                # Clean ANSI escape codes and percentage
-                percent_str = d.get('_percent_str', '0%')
-                clean_percent = re.sub(r'[^\d.]', '', percent_str).strip('%') or '0'
+                # Clean ANSI escape codes from progress data
+                percent_str = re.sub(r'\x1b\[[0-9;]*m', '', d.get('_percent_str', '0%'))
+                speed_str = re.sub(r'\x1b\[[0-9;]*m', '', d.get('_speed_str', 'N/A'))
+                eta_str = re.sub(r'\x1b\[[0-9;]*m', '', d.get('_eta_str', 'N/A'))
                 
                 progress_data[self.task_id] = {
-                    'progress': float(clean_percent),
-                    'status': 'Downloading',
-                    'filename': d.get('filename', '')
+                    'progress': float(re.sub(r'[^\d.]', '', percent_str).strip('%') or '0'),
+                    'speed': speed_str.strip(),
+                    'eta': eta_str.strip().replace('ETA ', ''),
+                    'status': 'Downloading'
                 }
             elif d['status'] == 'postprocessing':
                 progress_data[self.task_id] = {
                     'progress': 100,
                     'status': 'Merging video & audio',
-                    'filename': d.get('info_dict', {}).get('_filename', '')
+                    'speed': 'Final processing',
+                    'eta': 'Almost done!'
                 }
         except Exception as e:
             app.logger.error(f"Progress hook error: {str(e)}")
@@ -90,6 +94,11 @@ def fetch_media():
             'quiet': True,
             'no_warnings': False,
             'ignoreerrors': False,
+            'noprogress': False,
+    'progress_template': {
+        'download': '[download] %(progress._percent_str)s of %(progress._total_bytes_str)s at %(progress._speed_str)s ETA %(progress._eta_str)s',
+    },
+    'ratelimit': 29948576,  # 1MB/s minimum update interval
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -137,10 +146,18 @@ def fetch_media():
 @app.route('/progress/<task_id>')
 def progress(task_id):
     def generate():
-        while True:
-            data = progress_data.get(task_id, {})
-            yield f"data: {json.dumps(data)}\n\n"
-            time.sleep(0.5)
+        # Disable buffering
+        @flask.stream_with_context
+        def generator():
+            last_progress = -1
+            while True:
+                data = progress_data.get(task_id, {})
+                current_progress = data.get('progress', 0)
+                if current_progress != last_progress:
+                    last_progress = current_progress
+                    yield f"data: {json.dumps(data)}\n\n"
+                time.sleep(0.1)
+        return generator()
     return Response(generate(), mimetype='text/event-stream')
 
 @app.route('/downloads/<path:filename>')
