@@ -173,4 +173,4 @@ def preview_file(filename):
 if __name__ == '__main__':
     cleanup_thread = threading.Thread(target=cleanup_downloads, daemon=True)
     cleanup_thread.start()
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
